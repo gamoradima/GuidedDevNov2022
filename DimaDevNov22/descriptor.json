@@ -1,0 +1,17 @@
+﻿{
+  "Descriptor": {
+    "UId": "62906dd6-244b-9a5f-a212-67e17ec9a21e",
+    "Name": "DimaDevNov22",
+    "Type": 1,
+    "ModifiedOnUtc": "\/Date(1668616986000)\/",
+    "Maintainer": "Customer",
+    "ProjectPath": "Files/DimaDevNov22.csproj",
+    "DependsOn": [
+      {
+        "UId": "d7559847-f38e-410c-baee-6f43bbe80d42",
+        "PackageVersion": "7.8.0",
+        "Name": "SalesEnterpriseSoftkey_ENU"
+      }
+    ]
+  }
+}
