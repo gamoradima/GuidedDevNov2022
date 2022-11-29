@@ -1,4 +1,4 @@
-define("UsrRealty1Page", ["ProcessModuleUtilities"], function(ProcessModuleUtilities) {
+define("UsrRealty1Page", ["ProcessModuleUtilities", "ServiceHelper"], function(ProcessModuleUtilities, ServiceHelper) {
 	return {
 		entitySchemaName: "UsrRealty",
 		attributes: {
@@ -20,6 +20,23 @@ define("UsrRealty1Page", ["ProcessModuleUtilities"], function(ProcessModuleUtili
 				lookupListConfig: {
 					columns: ["UsrCommissionMultiplier"]
 				}
+			},
+			"UsrManager": {
+				dataValueType: Terrasoft.DataValueType.LOOKUP,
+				lookupListConfig: {
+                    "filters": [
+                        function() {
+                            var filterGroup = Ext.create("Terrasoft.FilterGroup");
+							var subFilters = this.Terrasoft.createFilterGroup();
+							subFilters.addItem(this.Terrasoft.createColumnFilterWithParameter(
+								this.Terrasoft.ComparisonType.EQUAL, "UsrParentRealty", this.get("Id")));
+
+							var filter = Terrasoft.createExistsFilter("[UsrRealtyVisit:UsrEmployeeContact:Id].Id", subFilters); 
+							filterGroup.add("MainFilter", filter);
+                            return filterGroup;
+                        }
+                    ]
+                }
 			}
 		},
 		modules: /**SCHEMA_MODULES*/{}/**SCHEMA_MODULES*/,
@@ -123,6 +140,21 @@ define("UsrRealty1Page", ["ProcessModuleUtilities"], function(ProcessModuleUtili
 					scope: this */
 				});
 				this.console.log("Business process started.");
+
+				/*
+				var ownerValue = {
+					value: "410006e1-ca4e-4502-a9ec-e54d922d2c00",
+					displayValue: "Supervisor"
+				};
+				*/
+				
+				var ownerValue = {
+					value: Terrasoft.SysValue.CURRENT_USER_CONTACT.value,
+					displayValue: Terrasoft.SysValue.CURRENT_USER_CONTACT.displayValue
+				};
+				
+				this.set("UsrManager", ownerValue);
+				
 			},
 			getMyButtonEnabled: function() {
 				var result = true;
@@ -142,6 +174,30 @@ define("UsrRealty1Page", ["ProcessModuleUtilities"], function(ProcessModuleUtili
 				this.addColumnValidator("UsrPriceUSD", this.positiveValueValidator);
 				this.addColumnValidator("UsrArea", this.positiveValueValidator);
 			},
+			onRunWebServiceButtonClick: function() {
+				var typeObject = this.get("UsrType");
+				if (!typeObject) {
+					return;
+				}
+				var typeId = typeObject.value;
+				var offerTypeObject = this.get("UsrOfferType");
+				if (!offerTypeObject) {
+					return;
+				}
+				var offerTypeId = offerTypeObject.value;
+				var serviceData = {
+					realtyTypeId: typeId,
+					realtyOfferTypeId: offerTypeId
+				};				
+				this.console.log("1");
+				ServiceHelper.callService("RealtyService", "GetTotalAmountByTypeId", this.getWebServiceResult, serviceData, this);
+				this.console.log("2");
+			},
+			getWebServiceResult: function(response, success) {
+				this.console.log("3");
+				this.Terrasoft.showInformation("Total amount by typeId: " + response.GetTotalAmountByTypeIdResult);
+			}
+
 		},
 		dataModels: /**SCHEMA_DATA_MODELS*/{}/**SCHEMA_DATA_MODELS*/,
 		diff: /**SCHEMA_DIFF*/[
@@ -204,7 +260,7 @@ define("UsrRealty1Page", ["ProcessModuleUtilities"], function(ProcessModuleUtili
 				"name": "MyButton",
 				"values": {
 					"layout": {
-						"colSpan": 24,
+						"colSpan": 10,
 						"rowSpan": 1,
 						"column": 0,
 						"row": 4,
@@ -225,6 +281,30 @@ define("UsrRealty1Page", ["ProcessModuleUtilities"], function(ProcessModuleUtili
 				"parentName": "ProfileContainer",
 				"propertyName": "items",
 				"index": 3
+			},
+			{
+				"operation": "insert",
+				"name": "RunWebServiceButton",
+				"values": {
+					"layout": {
+						"colSpan": 10,
+						"rowSpan": 1,
+						"column": 10,
+						"row": 4,
+						"layoutName": "ProfileContainer"
+					},
+					"itemType": 5,
+					"caption": {
+						"bindTo": "Resources.Strings.RunWebServiceButton"
+					},
+					"click": {
+						"bindTo": "onRunWebServiceButtonClick"
+					},
+					"style": "red"
+				},
+				"parentName": "ProfileContainer",
+				"propertyName": "items",
+				"index": 4
 			},
 			{
 				"operation": "insert",
